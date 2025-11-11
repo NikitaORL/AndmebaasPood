@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -104,6 +105,49 @@ namespace PoodAndmebaas
                 }
             }
             connection.Close();
+        }
+
+
+
+        public void Kustuta_btn_Click()
+        {
+            if (Kat_Box.SelectedItem != null)
+            {
+                connection.Open();
+                string kal_val = Kat_Box.SelectedItem.ToString();
+                command = new SqlCommand("DELETE FROM Kategooriatabel WHERE Kategooria_nimetus=@kat", connection);
+                command.Parameters.AddWithValue("@kat", kal_val);
+                command.ExecuteNonQuery();
+                connection.Close();
+                Kat_Box.Items.Clear();
+                NaitaKategooriad();
+            }
+        }
+
+        SaveFileDialog save;
+        OpenFileDialog open;
+        string extension=null;
+        public void otsi_fail_btn_Click(object sender, EventArgs e)
+        {
+            open = new OpenFileDialog();
+            open.InitialDirectory = @"C:\Users\opilane\Source\Repos\AndmebaasPood\PoodAndmebaas\Images";
+            open.Multiselect = true;
+            open.Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All files (*.*)|*.*";
+
+            FileInfo open_info = new FileInfo(@"C:\Users\opilane\Source\Repos\AndmebaasPood\PoodAndmebaas\Images" + open.FileName);
+            if (open.ShowDialog() == DialogResult.OK && Toode_txt.Text != null)
+            {
+                save = new SaveFileDialog();
+                save.InitialDirectory = Path.GetFullPath(@"..\..Images");
+                extension = Path.GetExtension(open.FileName);
+                save.FileName = Toode_txt.Text + Path.GetExtension(open.FileName);
+                save.Filter = "Images" + Path.GetExtension(open.FileName) + "|*" + Path.GetExtension(open.FileName);
+                if (save.ShowDialog() == DialogResult.OK && Toode_txt.Text != null)
+                {
+                    File.Copy(open.FileName, save.FileName);
+                    Toode_pb.Image = Image.FromFile(save.FileName);
+                }
+            }
         }
     }
 }
