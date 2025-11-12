@@ -27,7 +27,8 @@ namespace PoodAndmebaas
         public Form1()
         {
             InitializeComponent();
-
+            NaitaKategooriad(); 
+            NaitaAndmed();     
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -76,9 +77,41 @@ namespace PoodAndmebaas
 
         }
 
+        int Id;
         private void Lisa_btn_Click(object sender, EventArgs e)
         {
-
+            if (Toode_txt.Text.Trim() != string.Empty && Kogus_txt.Text.Trim() != string.Empty && Hind_txt.Text.Trim() != string.Empty && Kat_Box.SelectedItem != null)
+            {
+                try
+                {
+                    connection.Open();
+                    command = new SqlCommand("SELECT Id FROM Kategooriatabel WHERE Kategooria_nimetus=@kat", connection);
+                    command.Parameters.AddWithValue("@kat", Kat_Box.Text);
+                    command.ExecuteNonQuery();
+                    Id = Convert.ToInt32(command.ExecuteScalar());
+                    command = new SqlCommand("INSERT INTO Toodetabel (Toodenimetus,Kogus,Hind,Pilt,Bpilt,Kategooriad)" +
+                        "VALUES (@toode,@kogus,@hind,@pilt,@Bpilt,@kat)", connection);
+                    command.Parameters.AddWithValue("@toode", Toode_txt.Text);
+                    command.Parameters.AddWithValue("@kogus", Kogus_txt.Text);
+                    command.Parameters.AddWithValue("@hind", Hind_txt.Text);
+                    extension = Path.GetExtension(open.FileName); //.jpg-png
+                    command.Parameters.AddWithValue("@pilt", Toode_txt.Text + extension);
+                    imageData = File.ReadAllBytes(open.FileName);
+                    command.Parameters.AddWithValue("@Bpilt", imageData);
+                    command.Parameters.AddWithValue("@kat", Id);
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                    NaitaAndmed();
+                }
+                catch (Exception)
+                {
+                    MessageBox.Show("Andmebaasiga viga!");
+                }
+            }
+            else
+            {
+                MessageBox.Show("Viga!");
+            }
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -126,7 +159,7 @@ namespace PoodAndmebaas
 
         SaveFileDialog save;
         OpenFileDialog open;
-        string extension=null;
+        string extension = null;
         public void otsi_fail_btn_Click(object sender, EventArgs e)
         {
             open = new OpenFileDialog();
@@ -149,5 +182,84 @@ namespace PoodAndmebaas
                 }
             }
         }
+        public void NaitaAndmed()
+        {
+            connection.Open();
+            DataTable dt_toode = new DataTable();
+            adapter_toode = new SqlDataAdapter("SELECT Toodetabel.Id,Toodetabel.Toodenimetus,Toodetabel.Kogus," +
+                "Toodetabel.Hind,Toodetabel.Pilt,Toodetabel.Bpilt,Kategooriatabel.Kategooria_nimetus " +
+                "as Kategooria_nimetus FROM Toodetabel INNER JOIN Kategooriatabel on Toodetabel.Kategooriad=Kategooriatabel.Id ", connection);
+            adapter_toode.Fill(dt_toode);
+            dataGridView1.Columns.Clear();
+            dataGridView1.DataSource = dt_toode;
+            DataGridViewComboBoxColumn combo_kat = new DataGridViewComboBoxColumn();
+            combo_kat.DataPropertyName = "Kategooria_nimetus";
+            HashSet<string> keys = new HashSet<string>();
+            foreach (DataRow item in dt_toode.Rows)
+            {
+                string kat_n = item["Kategooria_nimetus"].ToString();
+                if (keys.Contains(kat_n))
+                {
+                    keys.Add(kat_n);
+                    combo_kat.Items.Add(kat_n);
+                }
+            }
+            dataGridView1.Columns.Add(combo_kat);
+            Toode_pb.Image = Image.FromFile(Path.Combine(Path.GetFullPath(@"..\..\Images"), "sealiha.jpg"));
+            connection.Close();
+        }
+        Form popupForm;
+
+        byte[] imageData;
+        private void dataGridView1_CellMouseEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            
+            if (e.RowIndex >= 0 && e.ColumnIndex ==4)
+            {
+                imageData = dataGridView1.Rows[e.RowIndex].Cells["Bpilt"].Value as byte[];
+                if (imageData != null)
+                {
+                    using (MemoryStream ms = new MemoryStream(imageData))
+                    {
+                        Image image = Image.FromStream(ms);
+                        Loopilt(image, e.RowIndex);
+                    }
+                }
+            }
+        }
+
+        private void dataGridView1_CellMouseLeave(object sender, DataGridViewCellEventArgs e)
+        {
+            if (popupForm != null && !popupForm.IsDisposed)
+            {
+                popupForm.Close();
+            }
+        }
+
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
+
+        private void Loopilt(Image image, int r)
+        {
+            popupForm = new Form();
+            popupForm.FormBorderStyle = FormBorderStyle.None;
+            popupForm.StartPosition = FormStartPosition.Manual;
+            popupForm.Size = new Size(200, 200);
+
+            PictureBox pictureBox = new PictureBox();
+            pictureBox.Image = image;
+            pictureBox.Dock = DockStyle.Fill;
+            pictureBox.SizeMode = PictureBoxSizeMode.Zoom;
+
+            popupForm.Controls.Add(pictureBox);
+
+            System.Drawing.Rectangle cellRectangle = dataGridView1.GetCellDisplayRectangle(4, r, true);
+            System.Drawing.Point popupLocation = dataGridView1.PointToClient(cellRectangle.Location);
+
+            popupForm.Location = new System.Drawing.Point(popupLocation.X + cellRectangle.Width, popupLocation.Y);
+            popupForm.Show();
+        }     
     }
 }

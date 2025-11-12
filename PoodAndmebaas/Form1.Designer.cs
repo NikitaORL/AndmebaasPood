@@ -195,6 +195,7 @@
             this.OtsiFail.TabIndex = 15;
             this.OtsiFail.Text = "Otsi fail";
             this.OtsiFail.UseVisualStyleBackColor = true;
+            this.OtsiFail.Click += new System.EventHandler(this.otsi_fail_btn_Click);
             // 
             // Maksta
             // 
@@ -255,6 +256,9 @@
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(938, 288);
             this.dataGridView1.TabIndex = 22;
+            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.dataGridView1.CellMouseEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseEnter);
+            this.dataGridView1.CellMouseLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellMouseLeave);
             // 
             // Form1
             // 
