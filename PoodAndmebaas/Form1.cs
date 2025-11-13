@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+
 namespace PoodAndmebaas
 {
     public partial class Form1 : Form
@@ -186,28 +187,42 @@ namespace PoodAndmebaas
         {
             connection.Open();
             DataTable dt_toode = new DataTable();
-            adapter_toode = new SqlDataAdapter("SELECT Toodetabel.Id,Toodetabel.Toodenimetus,Toodetabel.Kogus," +
-                "Toodetabel.Hind,Toodetabel.Pilt,Toodetabel.Bpilt,Kategooriatabel.Kategooria_nimetus " +
-                "as Kategooria_nimetus FROM Toodetabel INNER JOIN Kategooriatabel on Toodetabel.Kategooriad=Kategooriatabel.Id ", connection);
+            adapter_toode = new SqlDataAdapter(
+                "SELECT Toodetabel.Id, Toodetabel.Toodenimetus, Toodetabel.Kogus, " +
+                "Toodetabel.Hind, Toodetabel.Pilt, Toodetabel.Bpilt, " +
+                "Kategooriatabel.Kategooria_nimetus AS Kategooria_nimetus " +
+                "FROM Toodetabel INNER JOIN Kategooriatabel ON Toodetabel.Kategooriad = Kategooriatabel.Id",
+                connection
+            );
             adapter_toode.Fill(dt_toode);
+
             dataGridView1.Columns.Clear();
             dataGridView1.DataSource = dt_toode;
+
+            
             DataGridViewComboBoxColumn combo_kat = new DataGridViewComboBoxColumn();
+            combo_kat.HeaderText = "Kategooria";
             combo_kat.DataPropertyName = "Kategooria_nimetus";
+
             HashSet<string> keys = new HashSet<string>();
             foreach (DataRow item in dt_toode.Rows)
             {
                 string kat_n = item["Kategooria_nimetus"].ToString();
-                if (keys.Contains(kat_n))
+                if (!keys.Contains(kat_n)) 
                 {
                     keys.Add(kat_n);
                     combo_kat.Items.Add(kat_n);
                 }
             }
+
             dataGridView1.Columns.Add(combo_kat);
+
+           
             Toode_pb.Image = Image.FromFile(Path.Combine(Path.GetFullPath(@"..\..\Images"), "sealiha.jpg"));
+
             connection.Close();
         }
+
         Form popupForm;
 
         byte[] imageData;
@@ -240,6 +255,112 @@ namespace PoodAndmebaas
         {
 
         }
+
+        private void Puhasta_Click(object sender, EventArgs e)
+        {
+            Toode_txt.Text = "";
+            Kogus_txt.Text = "";
+            Hind_txt.Text = "";
+
+            using (FileStream fs = new FileStream(Path.Combine(Path.GetFullPath(@"..\..\Images"), "kana.jpg"), FileMode.Open, FileAccess.Read))
+            {
+                Toode_pb.Image = Image.FromStream(fs);
+            }
+        }
+
+        private void Kustuta_Click(object sender, EventArgs e)
+        {
+            Id = Convert.ToInt32(dataGridView1.SelectedRows[0].Cells["Id"].Value);
+            MessageBox.Show(Id.ToString());
+            if (Id != 0)
+            {
+                command = new SqlCommand("DELETE Toodetabel WHERE Id=@id", connection);
+                connection.Open();
+                command.Parameters.AddWithValue("@id", Id);
+                command.ExecuteNonQuery();
+                connection.Close();
+
+                NaitaAndmed();
+
+                MessageBox.Show("Andmed tabelist Tooded on kustutatud");
+            }
+            else 
+            {
+                MessageBox.Show("Viga Tooded tabelist andmete kustutamisega");
+            }
+        }
+
+        private void Uuenda_btn_Click(object sender, EventArgs e)
+        {
+            if (Toode_txt.Text != "" && Kogus_txt.Text != "" && Hind_txt.Text != "" && Toode_pb.Image != null)
+            {
+                command = new SqlCommand("UPDATE Toodetabel SET Toodenimetus=@toode, Kogus=@kogus," +
+                  "Hind=@hind, Pilt=@pilt WHERE Id=@id", connection);
+                connection.Open();
+                command.Parameters.AddWithValue("@id", Id);
+                command.Parameters.AddWithValue("@toode", Toode_txt.Text);
+                command.Parameters.AddWithValue("@kogus", Kogus_txt.Text);
+                command.Parameters.AddWithValue("@hind", Hind_txt.Text.Replace(",", "."));
+                string pilt = dataGridView1.SelectedRows[0].Cells["Pilt"].Value.ToString();
+                string file_pilt = Toode_txt.Text + extension; //kontroll
+                command.Parameters.AddWithValue("@pilt", file_pilt);
+                command.ExecuteNonQuery();
+                connection.Close();
+                NaitaAndmed();
+                MessageBox.Show("Andmed uuendatud!");
+            }
+            else
+            {
+                MessageBox.Show("Viga!");
+            }
+        }
+
+        List<string> fail_list;
+        PictureBox pictureBox;
+        int kat_Id;
+        TabControl kategooriad;
+        private void Pood_Click(object sender, EventArgs e)
+        {
+            Size = new Size(1350, 600);
+            kategooriad = new TabControl();
+            kategooriad.Name = "Kategooriad";
+            kategooriad.Width = 450;
+            kategooriad.Height = Height;
+            kategooriad.Location = new System.Drawing.Point(900, 0);
+            connection.Open();
+            adapter_kategooria = new SqlDataAdapter("SELECT id, Kategooria_nimetus FROM Kategooriatabel,", connection);
+            DataTable dt_kat = new DataTable();
+            adapter_kategooria.Fill(dt_kat);
+            ImageList iconList = new ImageList();
+            iconList.ColorDepth = ColorDepth.Depth32Bit;
+            iconList.ImageSize = new Size(25, 25);
+            int i = 0;
+            foreach (DataRow nimetus in dt_kat.Rows)
+            {
+                kategooriad.TabPages.Add((string)nimetus["Kategooria_nimetus"]);
+                kategooriad.TabPages[i].ImageIndex = i;
+                i++;
+                kat_Id = (int)nimetus["Id"];
+                fail_list = Failid_KatId(kat_Id);
+                int r = 0;
+                int c = 0;
+            }
+            foreach (var fail in fail_list)
+            {
+                pictureBox = new PictureBox();
+                pictureBox.Image = Image.FromFile(@"..\..\Images" + fail);
+                pictureBox.Width = pictureBox.Height = 100;
+                pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+                pictureBox.Location = new System.Drawing.Point(c, r);
+                c = c + 100 + 2; //järgmise kasti position (liigume paremale)
+                kategooriad.TabPages[i - 1].Controls.Add(pictureBox);
+            }
+            kategooriad.ImageList = iconList;
+            connection.Close();
+            this.Controls.Add(kategooriad);
+        }
+
+        //Document document;
 
         private void Loopilt(Image image, int r)
         {
