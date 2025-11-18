@@ -248,8 +248,8 @@
             this.Pood.Size = new System.Drawing.Size(134, 23);
             this.Pood.TabIndex = 20;
             this.Pood.Text = "Pood";
-            this.Pood.UseVisualStyleBackColor = true;
-            this.Pood.Click += new System.EventHandler(this.Pood_Click);
+            //this.Pood.UseVisualStyleBackColor = true;
+            //this.Pood.Click += new System.EventHandler(this.Pood_Click);
             // 
             // textBoxPood
             // 

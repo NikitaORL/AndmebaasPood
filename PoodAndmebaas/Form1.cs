@@ -161,26 +161,31 @@ namespace PoodAndmebaas
         SaveFileDialog save;
         OpenFileDialog open;
         string extension = null;
-        public void otsi_fail_btn_Click(object sender, EventArgs e)
+        private void otsi_fail_btn_Click(object sender, EventArgs e)
         {
             open = new OpenFileDialog();
-            open.InitialDirectory = @"C:\Users\opilane\Source\Repos\AndmebaasPood\PoodAndmebaas\Images";
+            open.InitialDirectory = @"C:\Users\opilane\source\repos\nastjRadasheva\Pood\images";
             open.Multiselect = true;
-            open.Filter = "Image Files (*.png;*.jpg;*.jpeg)|*.png;*.jpg;*.jpeg|All files (*.*)|*.*";
+            open.Filter = "Images Files(*.jpeg;*.bmp;*.png;*.jpg)|*.jpeg;*.bmp;*.png;*.jpg";
 
-            FileInfo open_info = new FileInfo(@"C:\Users\opilane\Source\Repos\AndmebaasPood\PoodAndmebaas\Images" + open.FileName);
+            FileInfo open_info = new FileInfo(@"C:\Users\opilane\source\repos\nastjRadasheva\Pood\images" + open.FileName);
             if (open.ShowDialog() == DialogResult.OK && Toode_txt.Text != null)
             {
                 save = new SaveFileDialog();
-                save.InitialDirectory = Path.GetFullPath(@"..\..Images");
-                extension = Path.GetExtension(open.FileName);
+                save.InitialDirectory = Path.GetFullPath(@"..\..\images");
+
                 save.FileName = Toode_txt.Text + Path.GetExtension(open.FileName);
-                save.Filter = "Images" + Path.GetExtension(open.FileName) + "|*" + Path.GetExtension(open.FileName);
+                save.Filter = "Image Files|" + "*" + Path.GetExtension(open.FileName) + "|All files|*.*";
+
                 if (save.ShowDialog() == DialogResult.OK && Toode_txt.Text != null)
                 {
                     File.Copy(open.FileName, save.FileName);
                     Toode_pb.Image = Image.FromFile(save.FileName);
                 }
+            }
+            else
+            {
+                MessageBox.Show("Puudub toode nimetus või oli vajutatud Cancel");
             }
         }
         public void NaitaAndmed()
@@ -315,50 +320,50 @@ namespace PoodAndmebaas
             }
         }
 
-        List<string> fail_list;
-        PictureBox pictureBox;
-        int kat_Id;
-        TabControl kategooriad;
-        private void Pood_Click(object sender, EventArgs e)
-        {
-            Size = new Size(1350, 600);
-            kategooriad = new TabControl();
-            kategooriad.Name = "Kategooriad";
-            kategooriad.Width = 450;
-            kategooriad.Height = Height;
-            kategooriad.Location = new System.Drawing.Point(900, 0);
-            connection.Open();
-            adapter_kategooria = new SqlDataAdapter("SELECT id, Kategooria_nimetus FROM Kategooriatabel,", connection);
-            DataTable dt_kat = new DataTable();
-            adapter_kategooria.Fill(dt_kat);
-            ImageList iconList = new ImageList();
-            iconList.ColorDepth = ColorDepth.Depth32Bit;
-            iconList.ImageSize = new Size(25, 25);
-            int i = 0;
-            foreach (DataRow nimetus in dt_kat.Rows)
-            {
-                kategooriad.TabPages.Add((string)nimetus["Kategooria_nimetus"]);
-                kategooriad.TabPages[i].ImageIndex = i;
-                i++;
-                kat_Id = (int)nimetus["Id"];
-                fail_list = Failid_KatId(kat_Id);
-                int r = 0;
-                int c = 0;
-            }
-            foreach (var fail in fail_list)
-            {
-                pictureBox = new PictureBox();
-                pictureBox.Image = Image.FromFile(@"..\..\Images" + fail);
-                pictureBox.Width = pictureBox.Height = 100;
-                pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
-                pictureBox.Location = new System.Drawing.Point(c, r);
-                c = c + 100 + 2; //järgmise kasti position (liigume paremale)
-                kategooriad.TabPages[i - 1].Controls.Add(pictureBox);
-            }
-            kategooriad.ImageList = iconList;
-            connection.Close();
-            this.Controls.Add(kategooriad);
-        }
+        //List<string> fail_list;
+        //PictureBox pictureBox;
+        //int kat_Id;
+        //TabControl kategooriad;
+        //private void Pood_Click(object sender, EventArgs e)
+        //{
+        //    Size = new Size(1350, 600);
+        //    kategooriad = new TabControl();
+        //    kategooriad.Name = "Kategooriad";
+        //    kategooriad.Width = 450;
+        //    kategooriad.Height = Height;
+        //    kategooriad.Location = new System.Drawing.Point(900, 0);
+        //    connection.Open();
+        //    adapter_kategooria = new SqlDataAdapter("SELECT id, Kategooria_nimetus FROM Kategooriatabel,", connection);
+        //    DataTable dt_kat = new DataTable();
+        //    adapter_kategooria.Fill(dt_kat);
+        //    ImageList iconList = new ImageList();
+        //    iconList.ColorDepth = ColorDepth.Depth32Bit;
+        //    iconList.ImageSize = new Size(25, 25);
+        //    int i = 0;
+        //    foreach (DataRow nimetus in dt_kat.Rows)
+        //    {
+        //        kategooriad.TabPages.Add((string)nimetus["Kategooria_nimetus"]);
+        //        kategooriad.TabPages[i].ImageIndex = i;
+        //        i++;
+        //        kat_Id = (int)nimetus["Id"];
+        //        fail_list = Failid_KatId(kat_Id);
+        //        int r = 0;
+        //        int c = 0;
+        //    }
+        //    foreach (var fail in fail_list)
+        //    {
+        //        pictureBox = new PictureBox();
+        //        pictureBox.Image = Image.FromFile(@"..\..\Images" + fail);
+        //        pictureBox.Width = pictureBox.Height = 100;
+        //        pictureBox.SizeMode = PictureBoxSizeMode.StretchImage;
+        //        pictureBox.Location = new System.Drawing.Point(c, r);
+        //        c = c + 100 + 2; //järgmise kasti position (liigume paremale)
+        //        kategooriad.TabPages[i - 1].Controls.Add(pictureBox);
+        //    }
+        //    kategooriad.ImageList = iconList;
+        //    connection.Close();
+        //    this.Controls.Add(kategooriad);
+        //}
 
         //Document document;
 
